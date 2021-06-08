@@ -1,5 +1,5 @@
 # GitHubApi-Project
-Currently operating at titleofthepage.com/GitHubApi.html
-Languages: HTML, Css, Bootstrap, jQuery, JavaScript
-Data: Github Api
-Tools: Brackets, Visual Studio 
+Currently operating at titleofthepage.com/GitHubApi.html <br>
+Languages: HTML, Css, Bootstrap, jQuery, JavaScript <br>
+Data: Github Api <br>
+Tools: Brackets, Visual Studio <br>
