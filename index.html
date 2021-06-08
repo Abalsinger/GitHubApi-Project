@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Github Api Project</title>
+      <!-- Custom styles for this template -->
+<!--
+    <link href="css/bootstrap/clean-blog.min.css" rel="stylesheet">
+    <link href="css/bootstrap/css-animations.css" rel="stylesheet">
+-->
+</head>
+<body>
+     <!-- Page Header -->
+    <header class="masthead">
+        <div class="overlay"></div>
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-8 col-md-10 mx-auto">
+              <div class="post-heading">
+                <h1>GitHubApi</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+    </header>
+    <!-- Page Main -->
+    <article>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-8">
+                    <button  class="btn btn-primary" onClick="window.location.reload();">Reset Searches</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 col-md-8">
+                    <h3>Grab User or Organization Info and Repos</h3>
+                    <p>Enter a single username below and click the link.</p>
+                    <input type="text" name="usernameInput" id="usernameInput" placeholder="Github Username...">
+                    <a href="#"  id="userSubmit">Click to Pull Data</a>
+                    <div id="userApidata"></div>
+                </div>
+                <div class="col-lg-8 col-md-8">
+                    <h3>Grab Commits from a User's Repo</h3>
+                    <p>Enter the User's Name and One of their repos, then click the link.</p>
+                    <input type="text" name="repoUsername" id="repoUsername" placeholder="Enter User or Org Name...">
+                    <input type="text" name="repoName" id="repoName" placeholder="Enter Repo Name...">  
+                    <a href="#"  id="Commitsbtn">Click to Pull Commits</a>
+                    <div id="commitdata"></div>
+                </div> 
+            </div>
+        </div>
+    </article>
+    <!-- Page Footer -->
+    <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-4 col-md-8 mx-auto">
+          <p class="copyright text-muted">&copy;2021</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript">
+$(function(){
+    //Find Repos and User Info by Username
+  $('#userSubmit').on('click', function(e){
+    e.preventDefault();
+    $('#userApidata').html('<div id="loader"><img src="img/loadingGlass.png" alt="loading..."></div>'); 
+    
+    var username = $('#usernameInput').val();
+    var userApi   = 'https://api.github.com/users/'+username;
+    var repoApi  = 'https://api.github.com/users/'+username+'/repos?sort=updated';
+    
+    requestJSON(userApi, function(json) {
+      if(json.message == "Not Found" || username == '') {
+        $('#userApidata').html("<h3>No User Info Found</h3>");
+      }
+      
+      else {
+        var githubName   = json.name;
+        var avatarUrl     = json.avatar_url;
+        var location   = json.location;
+        var type = json.type;
+        var reposCount     = json.public_repos;
+        
+        if(githubName == undefined) {githubName = username;}
+        
+        var innerhtml = '<h3>'+githubName+'</h3><p>Location: '+location+'</p><p>Type of Account:'+type+'</p>';
+        innerhtml = innerhtml + '<div class="ghcontent"><div class="avi"><img src="'+avatarUrl+'" width="80" height="80" alt="'+githubName+'"></div>';
+        innerhtml = innerhtml + '<p>Repos: '+reposCount+'</p></div>';
+        innerhtml = innerhtml + '<div class="repolist clearfix">';
+        
+        var repositories;
+        $.getJSON(repoApi, function(json){
+          repositories = json;   
+          outputPageContent();                
+        });          
+        
+        function outputPageContent() {
+          if(repositories.length == 0) { innerhtml = innerhtml + '<p>No repos!</p></div>'; }
+          else {
+            innerhtml = innerhtml + '<p><strong>Repos List:</strong></p><p>*Sorted by most recently updated*</p><ul>';
+            $.each(repositories, function(index) {
+              innerhtml = innerhtml + '<li><a href="'+repositories[index].html_url+'" target="_blank">'+repositories[index].name + '</a></li>';
+            });
+            innerhtml = innerhtml + '</ul></div>'; 
+          }
+          $('#userApidata').html(innerhtml);
+        } 
+      }
+    }); 
+  });
+
+  function requestJSON(url, callback) {
+    $.ajax({
+      url: url,
+      complete: function(xhr) {
+        callback.call(null, xhr.responseJSON);
+            }
+        });
+    }
+      //Find Commits by Username and Repo Name
+    $('#Commitsbtn').on('click',function(e){
+        e.preventDefault();
+        $('#commitdata').html('<div id="loader"><img src="" alt="loading..."></div>');
+    
+        var username = $('#repoUsername').val();
+        var reponame = $('#repoName').val();
+        var commitApi = 'https://api.github.com/repos/'+username+'/'+reponame+'/commits?page=1&per_page=5';
+                     
+        requestJSON(commitApi, function(json){
+           if(username == '') {
+            $('#commitdata').html("<h2>No Commits Found</h2>");
+          } 
+            else {
+                var innerhtml = '';
+
+                var commits;
+                $.getJSON(commitApi, function(json){
+                  commits = json;   
+                  outputCommitContent();                
+                });          
+
+                function outputCommitContent() {
+                  if(commits.length == 0) { innerhtml = innerhtml + '<p>No Commits</p></div>'; }
+                  else {
+                    innerhtml = innerhtml + '<p><strong>Commits List:</strong></p><p>*Five most recent*</p><ul>';
+                    $.each(commits, function(index) {
+                      innerhtml = innerhtml + '<li>Date:<a href="'+commits[index].html_url+'" target="_blank">'+commits[index].commit.committer.date+'</a></li><p>"'+commits[index].commit.message+'"</p>';
+                    });
+                    innerhtml = innerhtml + '</ul></div>'; 
+                  }
+                  $('#commitdata').html(innerhtml);
+                    }
+                };
+            })
+    });
+});
+    </script>
+</html>
